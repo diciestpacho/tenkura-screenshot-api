@@ -6,7 +6,7 @@ import base64
 
 app = FastAPI()
 
-# Health check endpoint
+# Health check
 @app.get("/")
 def root():
     return {"message": "hello"}
@@ -18,21 +18,28 @@ def screenshot(mountain_name: str, url: str):
     os.makedirs("screenshots", exist_ok=True)
 
     with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
-        page.goto(url)
+        browser = p.chromium.launch(headless=False)  # 🔍 headful browser (not headless)
+        context = browser.new_context(locale="ja-JP")  # 🌏 set Japanese locale
 
-        # Try to wait for the登山指数 image, but proceed even if it doesn't load
+        # 🧠 Pretend to be a Japanese Chrome browser
+        context.set_extra_http_headers({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+            "Referer": "https://tenkura.n-kishou.co.jp/",
+            "Accept-Language": "ja,en-US;q=0.9,en;q=0.8"
+        })
+
+        page = context.new_page()
+        page.goto(url, wait_until="networkidle")
+        page.wait_for_timeout(5000)  # ⏳ wait 5 seconds for JS to load
+
         try:
-            page.wait_for_selector("img[src*='tozan']", timeout=30000)  # 30 seconds
+            page.wait_for_selector("img[src*='tozan']", timeout=30000)
         except:
-            print("⚠️ Warning: TenKura 'tozan' image not found. Taking full-page screenshot anyway.")
+            print("⚠️ Warning: 登山指数 image not found, capturing page anyway.")
 
-        # Take screenshot whether the image is found or not
         page.screenshot(path=output_path, full_page=True)
         browser.close()
 
-    # Return Base64 image
     with open(output_path, "rb") as f:
         encoded = base64.b64encode(f.read()).decode("utf-8")
 
