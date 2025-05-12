@@ -22,7 +22,7 @@ def screenshot(mountain_name: str, url: str):
         browser = p.chromium.launch()
         page = browser.new_page()
         page.goto(url)
-        page.wait_for_selector("img[src*='tozan']", timeout=10000)
+        page.wait_for_selector("img[src*='tozan']", timeout=30000)
         page.screenshot(path=output_path, full_page=True)
         browser.close()
 
