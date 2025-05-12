@@ -1,4 +1,0 @@
-#!/bin/bash
-npx playwright install-deps
-playwright install
-uvicorn main:app --host 0.0.0.0 --port 10000
