@@ -18,7 +18,7 @@ def screenshot(mountain_name: str, url: str):
     os.makedirs("screenshots", exist_ok=True)
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  # 🔍 headful browser (not headless)
+        browser = p.chromium.launch(headless=True)  # 🔍 headful browser (not headless)
         context = browser.new_context(locale="ja-JP")  # 🌏 set Japanese locale
 
         # 🧠 Pretend to be a Japanese Chrome browser
