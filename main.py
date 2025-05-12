@@ -6,12 +6,11 @@ import base64
 
 app = FastAPI()
 
-# ✅ Keeps the app alive by responding to "/"
+# Health check endpoint
 @app.get("/")
 def root():
     return {"message": "hello"}
 
-# ✅ Takes a screenshot of the given TenKura page
 @app.get("/screenshot")
 def screenshot(mountain_name: str, url: str):
     filename = f"{mountain_name}.png"
@@ -22,11 +21,18 @@ def screenshot(mountain_name: str, url: str):
         browser = p.chromium.launch()
         page = browser.new_page()
         page.goto(url)
-        page.wait_for_selector("img[src*='tozan']", timeout=30000)
+
+        # Try to wait for the登山指数 image, but proceed even if it doesn't load
+        try:
+            page.wait_for_selector("img[src*='tozan']", timeout=30000)  # 30 seconds
+        except:
+            print("⚠️ Warning: TenKura 'tozan' image not found. Taking full-page screenshot anyway.")
+
+        # Take screenshot whether the image is found or not
         page.screenshot(path=output_path, full_page=True)
         browser.close()
 
-    # Read and encode image to base64
+    # Return Base64 image
     with open(output_path, "rb") as f:
         encoded = base64.b64encode(f.read()).decode("utf-8")
 
